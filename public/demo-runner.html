@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo test runner</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    pre { background: #f2f2f2; padding: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Demo runner</h1>
+  <p>This page listens for <code>postMessage</code> control messages from the LTI wrapper.</p>
+  <pre id="log"></pre>
+  <script>
+    var logEl = document.getElementById('log');
+    var lines = [];
+    function log(msg) {
+      lines.push(new Date().toISOString() + ' ' + msg);
+      logEl.textContent = lines.slice(-25).join('\n');
+    }
+    log('ready');
+
+    window.addEventListener('message', function (ev) {
+      var d = ev.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.channel !== 'd2l-lti-test-runner-control') return;
+      log('received: ' + d.action);
+      if (d.action === 'pause') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ channel: d.channel, action: 'paused' }, '*');
+        }
+      }
+      if (d.action === 'play' || d.action === 'resume') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ channel: d.channel, action: 'playing' }, '*');
+        }
+      }
+      if (d.action === 'stop') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ channel: d.channel, action: 'stopped' }, '*');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
